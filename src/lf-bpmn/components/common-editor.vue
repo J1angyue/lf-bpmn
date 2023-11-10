@@ -19,6 +19,8 @@
 </template>
 
 <script setup>
+import { getModel } from '../helper'
+
 const emits = defineEmits(['id-changed', 'text-changed', 'update:model-id'])
 const props = defineProps({
   modelId: {
@@ -34,12 +36,8 @@ const formModel = ref({
   text: ''
 })
 
-function getModel() {
-  return lfRef.value.getModelById(props.modelId)
-}
-
 function updatelId(id) {
-  const model = getModel()
+  const model = getModel(lfRef.value, props.modelId)
   if (model) {
     model.id = id
   }
@@ -49,7 +47,7 @@ function updatelId(id) {
 }
 
 function updateText(text) {
-  const model = getModel()
+  const model = getModel(lfRef.value, props.modelId)
   model?.updateText(text, (formModel.value.text = text))
   emits('text-changed', text)
 }
@@ -59,7 +57,7 @@ function resetFormModelByModelId() {
     id: '',
     text: ''
   }
-  const model = getModel()
+  const model = getModel(lfRef.value, props.modelId)
   if (!model) {
     return
   }

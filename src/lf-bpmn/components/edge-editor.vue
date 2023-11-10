@@ -1,7 +1,7 @@
 <template>
   <el-drawer
     close-on-click-modal
-    title="Edge properties Editor"
+    title="顺序流编辑器"
     :model-value="visible"
     @update:model-value="emits('update:visible', $event)"
   >
@@ -11,15 +11,15 @@
           :model-id="edgeId"
           @update:model-id="emits('update:nodeId', id)"
         />
-        <el-collapse-item title="流转属性">
-          <el-form-item label="流转类型">
+        <el-collapse-item title="顺序流属性">
+          <el-form-item label="顺序流类型">
             <el-radio-group
               :model-value="formModel.sequenceFlowType"
               @update:model-value="updateFlowType"
             >
-              <el-radio :label="SEQUENCE_FLOW_TYPE.NORMAL">普通流转</el-radio>
-              <el-radio :label="SEQUENCE_FLOW_TYPE.DEFAULT">默认流转</el-radio>
-              <el-radio :label="SEQUENCE_FLOW_TYPE.CONDITION">条件流转</el-radio>
+              <el-radio :label="SEQUENCE_FLOW_TYPE.NORMAL">普通顺序流</el-radio>
+              <el-radio :label="SEQUENCE_FLOW_TYPE.CONDITION">条件顺序流</el-radio>
+              <el-radio :label="SEQUENCE_FLOW_TYPE.DEFAULT">默认顺序流</el-radio>
             </el-radio-group>
           </el-form-item>
           <el-form-item
@@ -28,36 +28,20 @@
           >
             <el-input
               clearable
+              placeholder="表达式应当返回 boolean 值"
               :model-value="formModel.condition"
               @update:model-value="updateCondition"
             >
               <template #prepend>
-                <el-select
+                <el-checkbox
+                  label="CDATA"
+                  :true-label="BPMN_XML_TAGS.EXPRESSION_CDATA"
+                  :false-label="BPMN_XML_TAGS.EXPRESSION_TEXT"
                   :model-value="formModel.expressionType"
                   @update:model-value="updateExpressionType"
-                  :clearable="false"
-                >
-                  <el-option
-                    label="EL 表达式"
-                    :value="BPMN_XML_TAGS.EXPRESSION_TEXT"
-                  />
-                  <el-option
-                    label="CDATA 纯文本"
-                    :value="BPMN_XML_TAGS.EXPRESSION_CDATA"
-                  />
-                </el-select>
+                />
               </template>
             </el-input>
-          </el-form-item>
-        </el-collapse-item>
-        <el-collapse-item title="多实例">
-          <el-form-item label="回路特性">
-            <!-- <el-select v-model="loopCharacteristics" @change="changeLoopCharacteristicsType">
-              <el-option label="并行多重事件" value="ParallelMultiInstance" />
-              <el-option label="时序多重事件" value="SequentialMultiInstance" />
-              <el-option label="循环事件" value="StandardLoop" />
-              <el-option label="无" value="Null" />
-            </el-select> -->
           </el-form-item>
         </el-collapse-item>
       </el-collapse>
@@ -67,7 +51,7 @@
 
 <script setup>
 import CommentEditor from './common-editor.vue'
-import { SEQUENCE_FLOW_TYPE, BPMN_XML_TAGS } from '../helper'
+import { SEQUENCE_FLOW_TYPE, BPMN_XML_TAGS, getModel, getExpressionType } from '../helper'
 
 const lfRef = inject('lfRef')
 const emits = defineEmits(['update:visible'])
@@ -88,18 +72,16 @@ const formModel = ref({
   condition: ''
 })
 
-function getEdgeModel() {
-  return lfRef.value.getEdgeModelById(props.edgeId)
-}
-
 function updateFlowType(type) {
-  const edgeModel = getEdgeModel()
+  const edgeModel = getModel(lfRef.value, props.edgeId)
   if (!edgeModel) {
     return
   }
   const sourceNode = lfRef.value.getNodeModelById(edgeModel.sourceNodeId)
 
   formModel.value.sequenceFlowType = type
+  formModel.value.condition = ''
+  formModel.value.expressionType = BPMN_XML_TAGS.EXPRESSION_TEXT
 
   // `DEFAULT` 类型的连线应当设置源节点的 `default` 属性，属性值为连线的 `id`
   // https://www.flowable.com/open-source/docs/bpmn/ch07b-BPMN-Constructs#default-sequence-flow
@@ -119,7 +101,7 @@ function updateFlowType(type) {
     formModel.value.expressionType = BPMN_XML_TAGS.EXPRESSION_TEXT
     edgeModel.setProperties({
       [BPMN_XML_TAGS.CONDITION_EXPRESSION]: {
-        'xsi:type': 'tFormalExpression',
+        'xsi:type': 'bpmn:tFormalExpression',
         [formModel.value.expressionType]: ''
       }
     })
@@ -134,32 +116,27 @@ function updateFlowType(type) {
   // if (type === SEQUENCE_FLOW_TYPE.NORMAL)
 }
 
-function getExpressionTypeFromEdge(edgeModel) {
-  const conditionExpression = edgeModel.properties[BPMN_XML_TAGS.CONDITION_EXPRESSION]
-  return conditionExpression?.hasOwnProperty(BPMN_XML_TAGS.EXPRESSION_TEXT) ? BPMN_XML_TAGS.EXPRESSION_TEXT : BPMN_XML_TAGS.EXPRESSION_CDATA
-}
-
 function updateExpressionType(type) {
   formModel.value.expressionType = type
-  const edgeModel = getEdgeModel()
+  const edgeModel = getModel(lfRef.value, props.edgeId)
   if (!edgeModel) {
     return
   }
   const conditionExpression = edgeModel.properties[BPMN_XML_TAGS.CONDITION_EXPRESSION]
-  const currentExpressionType = getExpressionTypeFromEdge(edgeModel)
+  const currentExpressionType = getExpressionType(conditionExpression)
   const expression = conditionExpression[currentExpressionType]
-  delete conditionExpression[currentExpressionType]
+  Reflect.deleteProperty(conditionExpression, currentExpressionType)
   conditionExpression[type] = expression
 }
 
 function updateCondition(condition) {
-  const edgeModel = getEdgeModel()
+  const edgeModel = getModel(lfRef.value, props.edgeId)
   const expressionTag = edgeModel.properties[BPMN_XML_TAGS.CONDITION_EXPRESSION]
-  expressionTag[BPMN_XML_TAGS.EXPRESSION_TEXT] = formModel.value.condition = condition
+  expressionTag[getExpressionType(expressionTag)] = formModel.value.condition = condition
 }
 
 function resetFormModel() {
-  const edgeModel = getEdgeModel()
+  const edgeModel = getModel(lfRef.value, props.edgeId)
 
   formModel.value = {
     sequenceFlowType: SEQUENCE_FLOW_TYPE.NORMAL,
@@ -171,13 +148,13 @@ function resetFormModel() {
     return
   }
 
-  formModel.value.expressionType = getExpressionTypeFromEdge(edgeModel)
+  const expressionTag = edgeModel.properties[BPMN_XML_TAGS.CONDITION_EXPRESSION]
+  formModel.value.expressionType = getExpressionType(expressionTag)
 
   // 是否是条件流转
-  const expressionTag = edgeModel.properties[BPMN_XML_TAGS.CONDITION_EXPRESSION]
   if (expressionTag) {
     formModel.value.sequenceFlowType = SEQUENCE_FLOW_TYPE.CONDITION
-    formModel.value.condition = expressionTag[BPMN_XML_TAGS.EXPRESSION_TEXT]
+    formModel.value.condition = expressionTag[formModel.value.expressionType]
     return
   }
 
