@@ -164,9 +164,52 @@ function updateCompletionConditionType(type) {
   formModel.value.completionCondition = completeConditionProps[getExpressionType(completeConditionProps)] || ''
   // 删除现有的 #cdata 或 #text 属性（同时也会删除其值，所以删除前需要先保存）
   Reflect.deleteProperty(completeConditionProps, getExpressionType(completeConditionProps))
-  // 设置新的 #cdata 或 #text 属性及原有的表达式字符串
+  // 设置新的 #cdata 或 #text 属性及原有的表达式字符串属性值
   completeConditionProps[type] = formModel.value.completionCondition
   // 更新页面显示
   formModel.value.completionConditionType = type
 }
+
+function resetFormModelByNodeModel() {
+  const nodeModel = getModel(lfRef.value, props.nodeId)
+  if (!nodeModel) {
+    formModel.value = {
+      isMulTiInstance: false,
+      isSequential: false,
+      completionCondition: '',
+      completionConditionType: BPMN_XML_TAGS.EXPRESSION_TEXT
+    }
+    return
+  }
+
+  const properties = nodeModel.getProperties()
+  formModel.value.isMulTiInstance = Reflect.has(properties, BPMN_XML_TAGS.MULTI_INSTANCE)
+  formModel.value.isSequential = formModel.value.isMulTiInstance && !!properties[BPMN_XML_TAGS.MULTI_INSTANCE].isSequential
+
+  if (!formModel.value.isMulTiInstance) {
+    formModel.value.completionCondition = ''
+    formModel.value.completionConditionType = BPMN_XML_TAGS.EXPRESSION_TEXT
+    return
+  }
+
+  const conditionProps = getCompleteConditionProps(nodeModel)
+  if (!conditionProps) {
+    formModel.value.completionCondition = ''
+    formModel.value.completionConditionType = BPMN_XML_TAGS.EXPRESSION_TEXT
+    return
+  }
+  const expressionType = getExpressionType(conditionProps)
+  formModel.value.completionConditionType = expressionType
+  formModel.value.completionCondition = conditionProps[expressionType]
+}
+
+watch(
+  () => [props.visible, props.nodeId],
+  () => {
+    if (!props.visible || !props.visible) {
+      return
+    }
+    resetFormModelByNodeModel()
+  }
+)
 </script>
