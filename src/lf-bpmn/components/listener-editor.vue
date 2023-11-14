@@ -243,3 +243,9 @@ function resetFieldsByListener() {
 
 watch(() => props.listener, resetFieldsByListener, { deep: false })
 </script>
+
+<style scoped>
+.flex-1 {
+  flex: 1;
+}
+</style>

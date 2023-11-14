@@ -226,3 +226,9 @@ function updateFields(fields) {
 
 watch(() => props.modelId, resetListenersByModel, { immediate: true })
 </script>
+
+<style scoped>
+.flex-1 {
+  flex: 1;
+}
+</style>
