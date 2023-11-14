@@ -1,67 +1,8 @@
-:root {
-  --lf-bpmn-node-w: 100%;
-  --lf-bpmn-node-h: 100%;
-  --lf-bpmn-node-title-h: 30%;
-  --lf-bpmn-node-content-h: 70%;
-  --lf-bpmn-node-radius: 4px;
-  --lf-bpmn-node-padding: 0 16px;
-  --lf-bpmn-add-btn-w: 100%;
-  --lf-bpmn-add-btn-h: 100%;
-
-  --lf-bpmn-edge-color: #CACACA;
-  --lf-bpmn-primary-color: #3296FA;
-  --lf-bpmn-start-color: #576A95;
-  --lf-bpmn-end-color: #A3A5A8;
-  --lf-bpmn-approver-color: #FF943E;
-  --lf-bpmn-audit-color: #FB602D;
-  --lf-bpmn-gateway-color: #15BC83;
-}
-
-html, body, #app {
+html,
+body,
+#app {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-}
-
-.bpmn-node {
-  display: flex;
-  flex-direction: column;
-  width: var(--lf-bpmn-node-w);
-  height: var(--lf-bpmn-node-h);
-  background-color: white;
-}
-
-.bpmn-node .node-title {
-  color: white;
-  padding: var(--lf-bpmn-node-padding);
-  height: var(--lf-bpmn-node-title-h);
-  border-top-left-radius: var(--lf-bpmn-node-radius);
-  border-top-right-radius: var(--lf-bpmn-node-radius);
-}
-
-.bpmn-node .node-title .del-btn {
-  float: right;
-  cursor: pointer;
-  outline: none;
-  user-select: none;
-}
-
-.bpmn-node .node-content {
-  height: var(--lf-bpmn-node-content-h);
-  padding: var(--lf-bpmn-node-padding);
-  border: 1px solid white;
-}
-
-.h-full {
-  height: 100%;
-}
-.fixed {
-  position: fixed;
-}
-.top-0 {
-  top: 0;
-}
-.left-0 {
-  left: 0;
 }

@@ -16,10 +16,18 @@
       ></el-input>
     </el-form-item>
   </el-collapse-item>
+  <listener-list :model-id="modelId" />
+  <listener-list
+    v-if="isUserTask"
+    collapse-title="任务监听器"
+    :model-id="modelId"
+    :listener-tag="BPMN_XML_TAGS.TASK_LISTENER"
+  />
 </template>
 
 <script setup>
-import { getModel } from '../helper'
+import { getModel, TASK_TYPE, BPMN_XML_TAGS } from '../helper'
+import ListenerList from './listener-list.vue'
 
 const emits = defineEmits(['id-changed', 'text-changed', 'update:model-id'])
 const props = defineProps({
@@ -35,6 +43,7 @@ const formModel = ref({
   id: '',
   text: ''
 })
+const isUserTask = ref(false)
 
 function updatelId(id) {
   const model = getModel(lfRef.value, props.modelId)
@@ -59,10 +68,12 @@ function resetFormModelByModelId() {
   }
   const model = getModel(lfRef.value, props.modelId)
   if (!model) {
+    isUserTask.value = false
     return
   }
   formModel.value.id = model.id
   formModel.value.text = model.text.value
+  isUserTask.value = model.type === TASK_TYPE.USER_TASK
 }
 
 watch(() => props.modelId, resetFormModelByModelId, { immediate: true })

@@ -1,6 +1,8 @@
 import LogicFlow from '@logicflow/core'
 import { BpmnXmlAdapter, BPMNAdapter, BpmnElement, Menu } from '@logicflow/extension'
 
+import './style.css'
+
 import Pattern from './components/pattern.vue'
 import EdgeEditor from './components/edge-editor.vue'
 import BpmnIO from './components/io.vue'
