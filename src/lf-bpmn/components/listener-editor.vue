@@ -115,6 +115,7 @@
               <el-button
                 link
                 type="danger"
+                @click="confirmRmField($index)"
               >
                 删除
               </el-button>
@@ -227,18 +228,33 @@ function updateFieldExpType(type, index) {
   Reflect.deleteProperty(field, currField.value.type)
   currField.value.type = type
   field[type] = currField.value.expression
+  emits('update:fields', fields)
 }
 
 function resetFieldsByListener() {
   const fields = getListenerFields()
   if (!fields) {
     fieldList.value = []
+    return
   }
   fieldList.value = fields.map((field) => ({
     name: field.name,
     expression: field[getFieldExpType(field)],
     type: getFieldExpType(field)
   }))
+}
+
+function confirmRmField(index) {
+  if (!window.confirm('确认删除该字段吗？')) {
+    return
+  }
+  const fields = getListenerFields()
+  if (!fields || !fields.length) {
+    return
+  }
+  fieldList.value.splice(index, 1)
+  fields.splice(index, 1)
+  emits('update:fields', fields)
 }
 
 watch(() => props.listener, resetFieldsByListener, { deep: false })
