@@ -61,13 +61,22 @@
         />
         <span class="text">导出</span>
       </div>
+      <div
+        class="pattern-item"
+        @click="logXML"
+      >
+        <img
+          src="../assets/io.log.png"
+          alt="io.log.png"
+          class="icon"
+        />
+        <span class="text">输出</span>
+      </div>
     </el-collapse-item>
   </el-collapse>
 </template>
 
 <script setup>
-const lfRef = inject('lfRef')
-
 import startEvent from '../assets/event.start.png'
 import endEvent from '../assets/event.end.png'
 
@@ -79,6 +88,8 @@ import inclusiveGateway from '../assets/gateway.inclusive.png'
 import parallelGateway from '../assets/gateway.parallel.png'
 
 import subProcess from '../assets/subprocess.expanded.png'
+
+const lfRef = inject('lfRef')
 
 const collapseList = reactive([
   {
@@ -184,6 +195,11 @@ function exportXML() {
 function areaSelect() {
   lfRef.value.extension.selectionSelect.openSelectionSelect()
   lfRef.value.once('selection:selected', () => lfRef.value.extension.selectionSelect.closeSelectionSelect())
+}
+
+function logXML() {
+  console.log(lfRef.value.getGraphData())
+  console.log(lfRef.value.getGraphRawData())
 }
 </script>
 

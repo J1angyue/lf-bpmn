@@ -1,7 +1,8 @@
 <script setup>
 import useLfBpmn from '@/lf-bpmn'
 
-const { containerRef, Pattern, EdgeEditor, NodeEditor, edgeDrawerVisible, nodeDrawerVisible, edgeId, nodeId } = useLfBpmn()
+const { containerRef, Pattern, EdgeEditor, NodeEditor, ProcessEditor, edgeDrawerVisible, nodeDrawerVisible, processDrawerVisible, edgeId, nodeId } =
+  useLfBpmn()
 </script>
 
 <template>
@@ -10,7 +11,9 @@ const { containerRef, Pattern, EdgeEditor, NodeEditor, edgeDrawerVisible, nodeDr
     <div
       ref="containerRef"
       class="flex-1"
+      @click="processDrawerVisible = true"
     ></div>
+    <ProcessEditor v-model:visible="processDrawerVisible" />
     <NodeEditor
       v-model:visible="nodeDrawerVisible"
       v-model:node-id="nodeId"

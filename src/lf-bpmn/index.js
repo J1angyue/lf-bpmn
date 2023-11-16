@@ -5,6 +5,7 @@ import useEpComponents from './ep-components'
 import Pattern from './components/pattern.vue'
 import EdgeEditor from './components/edge-editor.vue'
 import NodeEditor from './components/node-editor.vue'
+import ProcessEditor from './components/process-editor.vue'
 
 LogicFlow.use(BPMNAdapter)
 LogicFlow.use(BPMNElements)
@@ -22,6 +23,8 @@ export default function useLfBpmn() {
 
   const nodeId = ref('')
   const nodeDrawerVisible = ref(false)
+
+  const processDrawerVisible = ref(true)
 
   function initEvents() {
     lfRef.value.on('edge:click', ({ data }) => {
@@ -55,8 +58,10 @@ export default function useLfBpmn() {
     edgeId,
     edgeDrawerVisible,
     nodeDrawerVisible,
+    processDrawerVisible,
     Pattern,
     EdgeEditor,
-    NodeEditor
+    NodeEditor,
+    ProcessEditor
   }
 }
