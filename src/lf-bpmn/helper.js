@@ -5,6 +5,7 @@ export const SEQUENCE_FLOW_TYPE = {
 }
 
 export const MULTI_INSTANCE_TYPE = {
+  NONE: 'none',
   PARALLEL: 'parallel',
   SEQUENTIAL: 'sequential'
 }
@@ -38,6 +39,11 @@ export const BPMN_XML_ATTRS = {
   EXPRESSION: 'expression',
   DELEGATE_EXPRESSION: 'delegateExpression',
   STRING_VALUE: 'stringValue'
+}
+
+export const LF_PROPS_KEYS = {
+  MULTI_INSTANCE: 'multiInstanceType',
+  IS_DEFAULT_FLOW: 'isDefaultFlow'
 }
 
 const LISTENER_TYPE_LIST = [BPMN_XML_ATTRS.JAVA_CLASS, BPMN_XML_ATTRS.EXPRESSION, BPMN_XML_ATTRS.DELEGATE_EXPRESSION]

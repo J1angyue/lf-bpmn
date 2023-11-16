@@ -13,42 +13,32 @@
         />
         <!-- TODO: 网关与事件不能设置为多实例 -->
         <el-collapse-item title="多实例">
-          <el-form-item
-            label-position="left"
-            label="是否多实例"
-          >
-            <el-switch
-              :model-value="formModel.isMulTiInstance"
-              @update:model-value="updateMulInsType"
-            />
+          <el-form-item label="多实例实例执行方式">
+            <el-radio-group
+              :model-value="formModel.multiInsType"
+              @update:model-value="updateMulTiInstance"
+            >
+              <el-radio :label="MULTI_INSTANCE_TYPE.NONE">无</el-radio>
+              <el-radio :label="MULTI_INSTANCE_TYPE.PARALLEL">并行执行</el-radio>
+              <el-radio :label="MULTI_INSTANCE_TYPE.SEQUENTIAL">顺序执行</el-radio>
+            </el-radio-group>
           </el-form-item>
-          <template v-if="formModel.isMulTiInstance">
-            <el-form-item label="实例执行方式">
-              <el-radio-group
-                :model-value="formModel.isSequential"
-                @update:model-value="updateIsSequential"
-              >
-                <el-radio :label="false">并行执行</el-radio>
-                <el-radio :label="true">顺序执行</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-form-item label="完成条件">
-              <el-input
-                :model-value="formModel.completionCondition"
-                @update:model-value="updateCompletionCondition"
-              >
-                <template #prepend>
-                  <el-checkbox
-                    label="CDATA"
-                    :true-label="BPMN_XML_TAGS.EXPRESSION_CDATA"
-                    :false-label="BPMN_XML_TAGS.EXPRESSION_TEXT"
-                    :model-value="formModel.completionConditionType"
-                    @update:model-value="updateCompletionConditionType"
-                  />
-                </template>
-              </el-input>
-            </el-form-item>
-          </template>
+          <el-form-item label="完成条件">
+            <el-input
+              :model-value="formModel.completionCondition"
+              @update:model-value="updateCompletionCondition"
+            >
+              <template #prepend>
+                <el-checkbox
+                  label="CDATA"
+                  :true-label="BPMN_XML_TAGS.EXPRESSION_CDATA"
+                  :false-label="BPMN_XML_TAGS.EXPRESSION_TEXT"
+                  :model-value="formModel.completionConditionType"
+                  @update:model-value="updateCompletionConditionType"
+                />
+              </template>
+            </el-input>
+          </el-form-item>
         </el-collapse-item>
       </el-collapse>
     </el-form>
@@ -56,7 +46,7 @@
 </template>
 
 <script setup>
-import { getModel, BPMN_XML_TAGS, getExpressionType } from '../helper'
+import { getModel, BPMN_XML_TAGS, MULTI_INSTANCE_TYPE, LF_PROPS_KEYS, getExpressionType } from '../helper'
 import CommentEditor from './common-editor.vue'
 
 const lfRef = inject('lfRef')
@@ -73,48 +63,37 @@ const props = defineProps({
 })
 
 const formModel = ref({
-  isMulTiInstance: false,
+  multiInsType: MULTI_INSTANCE_TYPE.NONE,
   isSequential: false,
   completionCondition: '',
   completionConditionType: BPMN_XML_TAGS.EXPRESSION_TEXT
 })
 
-// 设置是否多实例
+// 设置多实例
 // https://www.flowable.com/open-source/docs/bpmn/ch07b-BPMN-Constructs#xml-representation-34
-function updateMulInsType(isMulTiInstance) {
+function updateMulTiInstance(mulTiInsOpt) {
   const nodeModel = getModel(lfRef.value, props.nodeId)
   if (!nodeModel) {
     return
   }
 
-  formModel.value.isMulTiInstance = isMulTiInstance
-  formModel.value.isSequential = false
+  formModel.value.multiInsType = mulTiInsOpt
+  formModel.value.isSequential = mulTiInsOpt === MULTI_INSTANCE_TYPE.SEQUENTIAL
 
   // 不是多实例时应当移除 <multiInstanceLoopCharacteristics /> 标签
-  if (!isMulTiInstance) {
+  if (!mulTiInsOpt === MULTI_INSTANCE_TYPE.NONE) {
+    nodeModel.deleteProperty(LF_PROPs_KEYS.MULTI_INSTANCE)
     nodeModel.deleteProperty(BPMN_XML_TAGS.MULTI_INSTANCE)
     return
   }
 
   // 多实例时应当添加 <multiInstanceLoopCharacteristics /> 标签
   nodeModel.setProperties({
+    [LF_PROPS_KEYS.MULTI_INSTANCE]: mulTiInsOpt,
     [BPMN_XML_TAGS.MULTI_INSTANCE]: {
       isSequential: formModel.value.isSequential
     }
   })
-}
-
-// 设置多实例串行还是并行
-function updateIsSequential(isSequential) {
-  const nodeModel = getModel(lfRef.value, props.nodeId)
-  if (!nodeModel) {
-    return
-  }
-  const multiInsTag = nodeModel.properties[BPMN_XML_TAGS.MULTI_INSTANCE]
-  if (!multiInsTag) {
-    return
-  }
-  multiInsTag.isSequential = formModel.value.isSequential = isSequential
 }
 
 // 获取多实例的完成条件属性，多实例没有完成条件时就设置一个并返回
@@ -174,7 +153,7 @@ function resetFormModelByNodeModel() {
   const nodeModel = getModel(lfRef.value, props.nodeId)
   if (!nodeModel) {
     formModel.value = {
-      isMulTiInstance: false,
+      multiInsType: MULTI_INSTANCE_TYPE.NONE,
       isSequential: false,
       completionCondition: '',
       completionConditionType: BPMN_XML_TAGS.EXPRESSION_TEXT
@@ -183,10 +162,15 @@ function resetFormModelByNodeModel() {
   }
 
   const properties = nodeModel.getProperties()
-  formModel.value.isMulTiInstance = Reflect.has(properties, BPMN_XML_TAGS.MULTI_INSTANCE)
-  formModel.value.isSequential = formModel.value.isMulTiInstance && !!properties[BPMN_XML_TAGS.MULTI_INSTANCE].isSequential
+  if (!Reflect.has(properties, BPMN_XML_TAGS.MULTI_INSTANCE)) {
+    formModel.value.multiInsType = MULTI_INSTANCE_TYPE.NONE
+    formModel.value.isSequential = false
+  } else {
+    formModel.value.isSequential = !!properties[BPMN_XML_TAGS.MULTI_INSTANCE].isSequential
+    formModel.value.multiInsType = formModel.value.isSequential ? MULTI_INSTANCE_TYPE.SEQUENTIAL : MULTI_INSTANCE_TYPE.PARALLEL
+  }
 
-  if (!formModel.value.isMulTiInstance) {
+  if (formModel.value.multiInsType === MULTI_INSTANCE_TYPE.NONE) {
     formModel.value.completionCondition = ''
     formModel.value.completionConditionType = BPMN_XML_TAGS.EXPRESSION_TEXT
     return

@@ -51,7 +51,7 @@
 
 <script setup>
 import CommentEditor from './common-editor.vue'
-import { SEQUENCE_FLOW_TYPE, BPMN_XML_TAGS, getModel, getExpressionType } from '../helper'
+import { SEQUENCE_FLOW_TYPE, BPMN_XML_TAGS, LF_PROPS_KEYS, getModel, getExpressionType } from '../helper'
 
 const lfRef = inject('lfRef')
 const emits = defineEmits(['update:visible'])
@@ -88,14 +88,14 @@ function updateFlowType(type) {
   if (type === SEQUENCE_FLOW_TYPE.DEFAULT) {
     sourceNode?.setProperties({ default: edgeModel.id })
     edgeModel.deleteProperty(BPMN_XML_TAGS.CONDITION_EXPRESSION)
-    edgeModel.setProperties({ isDefaultFlow: true })
+    edgeModel.setProperties({ [LF_PROPS_KEYS.IS_DEFAULT_FLOW]: true })
     return
   }
 
   // 不是 `DEFAULT` 类型的顺序流时应当删除源节点的 `default` 属性
   // https://www.flowable.com/open-source/docs/bpmn/ch07b-BPMN-Constructs#xml-representation-20
   sourceNode?.deleteProperty(SEQUENCE_FLOW_TYPE.DEFAULT)
-  edgeModel.deleteProperty('isDefaultFlow')
+  edgeModel.deleteProperty(LF_PROPS_KEYS.IS_DEFAULT_FLOW)
 
   // `CONDITION` 类型的连线应当设置表达式
   // https://www.flowable.com/open-source/docs/bpmn/ch07b-BPMN-Constructs#conditional-sequence-flow
@@ -164,7 +164,7 @@ function resetFormModel() {
   const defaultEdgeId = lfRef.value.getNodeModelById(edgeModel.sourceNodeId)?.properties[SEQUENCE_FLOW_TYPE.DEFAULT]
   if (defaultEdgeId && defaultEdgeId === props.edgeId) {
     formModel.value.sequenceFlowType = SEQUENCE_FLOW_TYPE.DEFAULT
-    edgeModel.setProperties({ isDefaultFlow: true })
+    edgeModel.setProperties({ [LF_PROPS_KEYS.IS_DEFAULT_FLOW]: true })
     return
   }
 
